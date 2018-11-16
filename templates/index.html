@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block title %}
+  Welcome
+{% endblock %}
+
+{% block body %}
+<h1>Welcome to my New Site</h1>
+
+<p style="color: red">{{message}}</p>
+
+<div>
+  <p>If you are already registered please <a href= "{{url_for('login')}}">Log in</a></p>
+  <p>If you are not please <a href= "{{url_for('register')}}">register</a></p>
+</div>
+{% endblock %}

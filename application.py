@@ -6,6 +6,7 @@ from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from validate_email import validate_email
+import bcrypt
 
 
 app = Flask(__name__)
@@ -22,7 +23,6 @@ Session(app)
 # Set up database
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
-
 
 @app.route("/")
 def index():
@@ -51,9 +51,10 @@ def login():
         user = db.execute("SELECT email FROM users WHERE email = :email",{"email": email}).fetchone()
 
         if user is None :
+            hashed = bcrypt.hashpw(password.encode('utf8'), bcrypt.gensalt())
             db.execute("INSERT INTO users (firstname, lastname, email, password) \
                                 VALUES (:firstname, :lastname, :email, :password)",
-                                {"firstname": firstname, "lastname": lastname, "email": email, "password": password})
+                                {"firstname": firstname, "lastname": lastname, "email": email, "password": hashed.decode('utf-8')})
             db.commit()
             return render_template('login.html', email=email, password=password, message_good="You have been registered")
         else:
@@ -70,16 +71,22 @@ def welcome():
     if request.method=='POST':
         email = request.form['email']
         password = request.form['password']
-        user = db.execute("SELECT * FROM users WHERE email = :email AND password = :password",
-            {"email": email, "password": password}).fetchone()
-        if user is None:
-            return render_template("login.html", message="Email or Password incorrect !")
+        user = db.execute("SELECT * FROM users WHERE email = :email",
+            {"email": email}).fetchone()
+        hashed = user.password.encode('utf-8')
 
-        session["lastname"] = user.lastname
-        session["firstname"] = user.firstname
-        session["email"] = user.email
-        session["user_id"] = user.id
-        return render_template('welcome.html', login=True, email=user.email)
+        if user is None:
+            return render_template("login.html", message="Email is incorrect !")
+
+        if bcrypt.checkpw(password.encode('utf8'), hashed):
+            session["lastname"] = user.lastname
+            session["firstname"] = user.firstname
+            session["email"] = user.email
+            session["user_id"] = user.id
+            return render_template('welcome.html', login=True, email=user.email)
+
+        else :
+            return render_template("login.html", message="Password is incorrect !")
 
     if request.method=='GET':
         if (session["user_id"]):
@@ -91,5 +98,6 @@ def welcome():
 def logout():
     session["lastname"] = None
     session["firstname"] = None
+    session["email"]= None
     session["user_id"] = None
     return redirect(url_for('index')) 

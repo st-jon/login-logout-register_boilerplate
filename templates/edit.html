@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block title %}
+  Edit your infos
+{% endblock %}
+
+{% block body %}
+    <h1>Edit your profile</h1>
+
+    <p style="color:red">{{message}}</p>
+
+    <form action="{{ url_for('edit') }}" method="post">
+
+        <div class="form-group">
+            <input class="form-control" name="firstname" placeholder="first name" value="{{firstname}}"></input>
+        </div>
+
+        <div class="form-group">
+            <input class="form-control" name="lastname" placeholder="last name" value="{{lastname}}">
+        </div>
+
+        <div class="form-group">
+          <input class="form-control" name="email" placeholder="email" value="{{email}}">
+        </div>
+
+        <div class="form-group">
+          <input class="form-control" type="password" name="password" placeholder="password">
+        </div>
+
+        <div class="form-group">
+          <input class="form-control" type="password" name="confirm" placeholder="confirm password">
+      </div>
+
+        <div class="form-group">
+            <button class="btn btn-primary">Edit</button>
+        </div>
+
+    </form>
+{% endblock %}

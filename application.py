@@ -94,6 +94,32 @@ def welcome():
         else:
             return render_template('index.html', message="You have to log in !")
 
+@app.route("/edit", methods=["GET", "POST"])
+def edit():
+    if request.method=='GET':
+        return render_template('edit.html', firstname=session["firstname"], lastname=session["lastname"], email=session["email"], login=True)
+    if request.method=='POST':
+        firstname = request.form['firstname']
+        lastname = request.form['lastname']
+        email = request.form['email']
+        password = request.form['password']
+        confirm = request.form['confirm']
+
+        if len(password) == 0 or len(firstname) == 0 or len(lastname) == 0 or len(email) == 0 :
+            return render_template('edit.html', message="All fields needed")
+
+        if validate_email(email) == False:
+            return render_template('edit.html', message="Please provide a correct email")
+
+        if password != confirm :
+            return render_template('edit.html', message="please confirm password")
+
+        hashed = bcrypt.hashpw(password.encode('utf8'), bcrypt.gensalt())
+        db.execute("UPDATE users SET firstname = :firstname, lastname = :lastname, email = :email, password = :password WHERE id = :id",
+                    {"firstname": firstname, "lastname": lastname, "email": email, "password": hashed.decode('utf-8'), "id": session['user_id']})
+        db.commit()
+        return render_template('welcome.html', message="Your profile has been updated", login=True, email=email)
+
 @app.route("/logout")
 def logout():
     session["lastname"] = None

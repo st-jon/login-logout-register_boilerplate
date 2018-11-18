@@ -73,10 +73,10 @@ def welcome():
         password = request.form['password']
         user = db.execute("SELECT * FROM users WHERE email = :email",
             {"email": email}).fetchone()
-        hashed = user.password.encode('utf-8')
-
         if user is None:
             return render_template("login.html", message="Email is incorrect !")
+            
+        hashed = user.password.encode('utf-8')
 
         if bcrypt.checkpw(password.encode('utf8'), hashed):
             session["lastname"] = user.lastname
